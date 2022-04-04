@@ -8,10 +8,11 @@ class Message {
   final bool isLiked;
   final bool unread;
 
-  Message(this.isLiked, {
+  Message({
     required this.sender,
     required this.time,
     required this.text,
+    required this.isLiked,
     required this.unread,
   });
 }

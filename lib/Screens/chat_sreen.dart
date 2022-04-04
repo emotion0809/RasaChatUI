@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 
 import '../Model/message_model.dart';
 import '../Model/user_model.dart';
+import 'package:intl/intl.dart';
 
 class ChatScreen extends StatefulWidget {
   final User user;
-
   ChatScreen({required this.user});
 
   @override
@@ -13,6 +13,9 @@ class ChatScreen extends StatefulWidget {
 }
 
 class _ChatScreenState extends State<ChatScreen> {
+  final inputController = TextEditingController();
+  DateTime now = DateTime.now();
+
   _buildMessage(Message message, bool isMe) {
     final Container msg = Container(
       margin: isMe
@@ -98,6 +101,7 @@ class _ChatScreenState extends State<ChatScreen> {
           Expanded(
             child: TextField(
               textCapitalization: TextCapitalization.sentences,
+              controller: inputController,
               onChanged: (value) {},
               decoration: InputDecoration.collapsed(
                 hintText: 'Send a message...',
@@ -108,7 +112,9 @@ class _ChatScreenState extends State<ChatScreen> {
             icon: Icon(Icons.send),
             iconSize: 25.0,
             color: Theme.of(context).primaryColor,
-            onPressed: () {},
+            onPressed: () {
+              sendMessage();
+            },
           ),
         ],
       ),
@@ -156,7 +162,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     topRight: Radius.circular(30.0),
                   ),
                   child: ListView.builder(
-                    reverse: true,
+                    reverse: false,
                     padding: EdgeInsets.only(top: 15.0),
                     itemCount: messages.length,
                     itemBuilder: (BuildContext context, int index) {
@@ -173,5 +179,18 @@ class _ChatScreenState extends State<ChatScreen> {
         ),
       ),
     );
+  }
+
+  sendMessage(){
+    if (inputController.text != ''){
+      String formattedDate = DateFormat('h:mm a').format(now);
+      messages.add(Message(
+          sender: currentUser,
+          time: formattedDate,
+          text: inputController.text,
+          isLiked: false,
+          unread: false));
+    }
+    setState(() {});
   }
 }
