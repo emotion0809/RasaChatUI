@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:rasa_chat_ui/Model/user_model.dart';
 
 class Message {
@@ -18,7 +20,7 @@ class Message {
 }
 
 final User currentUser = User(id: 0, name: 'Current User', imageUrl: 'assets/images/greg.jpg',);
-final User rasa = User(id: 0, name: 'Rasa', imageUrl: 'assets/images/rasa.png');
+final User rasa = User(id: 1, name: 'Rasa', imageUrl: 'assets/images/rasa.png');
 
 // FAVORITE CONTACTS
 List<User> favorites = [rasa];
