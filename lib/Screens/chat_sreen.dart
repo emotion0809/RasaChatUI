@@ -2,6 +2,7 @@ import 'dart:html';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 import '../Model/message_model.dart';
 import '../Model/user_model.dart';
 import 'package:intl/intl.dart';
@@ -22,8 +23,7 @@ class _ChatScreenState extends State<ChatScreen> {
   final inputController = TextEditingController();
   DateTime now = DateTime.now();
   String inputHint = "send a msg...";
-
-  //文字轉語
+  //語音轉文字
   bool _hasSpeech = false;
   double level = 0.0;
   double minSoundLevel = 50000;
@@ -33,6 +33,9 @@ class _ChatScreenState extends State<ChatScreen> {
   final SpeechToText speech = SpeechToText();
   String _text = "";
   double _confidence = 1.0;
+  //文字轉語音
+  FlutterTts flutterTts = FlutterTts();
+
 
   @override
   void initState() {
@@ -41,11 +44,25 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> initSpeechState() async {
+    //語音轉文字
     var hasSpeech = await speech.initialize(onStatus: statusListener, onError: errorListener, debugLogging: false);
     if (!mounted) return;
     setState(() {
       _hasSpeech = hasSpeech;
     });
+    //文字轉語音
+    await flutterTts.setSharedInstance(true);
+    await flutterTts.setIosAudioCategory(IosTextToSpeechAudioCategory.ambient,
+        [
+          IosTextToSpeechAudioCategoryOptions.allowBluetooth,
+          IosTextToSpeechAudioCategoryOptions.allowBluetoothA2DP,
+          IosTextToSpeechAudioCategoryOptions.mixWithOthers
+        ],
+        IosTextToSpeechAudioMode.voicePrompt
+    );
+    await flutterTts.awaitSpeakCompletion(true);
+    await flutterTts.awaitSynthCompletion(true);
+    await flutterTts.setLanguage("en-US");
   }
 
   _buildMessage(Message message, bool isMe, bool isImage) {
@@ -265,6 +282,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 isLiked: false,
                 unread: false));
           }
+          await flutterTts.speak(API_Manager.bot_reply[i]);
           API_Manager.bot_reply[i] = "";
         }
       }
