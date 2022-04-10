@@ -1,11 +1,13 @@
-import 'package:flutter/material.dart';
+import 'dart:html';
+import 'dart:math';
 
-import '../Model/auth_manager.dart';
+import 'package:flutter/material.dart';
 import '../Model/message_model.dart';
 import '../Model/user_model.dart';
 import 'package:intl/intl.dart';
-
 import '../services/api_manager.dart';
+import 'package:speech_to_text/speech_to_text.dart';
+import 'package:speech_to_text/speech_recognition_error.dart';
 
 class ChatScreen extends StatefulWidget {
   final User user;
@@ -19,6 +21,32 @@ class ChatScreen extends StatefulWidget {
 class _ChatScreenState extends State<ChatScreen> {
   final inputController = TextEditingController();
   DateTime now = DateTime.now();
+  String inputHint = "send a msg...";
+
+  //文字轉語
+  bool _hasSpeech = false;
+  double level = 0.0;
+  double minSoundLevel = 50000;
+  double maxSoundLevel = -50000;
+  String _currentLocaleId = 'en_US';
+  int resultListened = 0;
+  final SpeechToText speech = SpeechToText();
+  String _text = "";
+  double _confidence = 1.0;
+
+  @override
+  void initState() {
+    super.initState();
+    initSpeechState();
+  }
+
+  Future<void> initSpeechState() async {
+    var hasSpeech = await speech.initialize(onStatus: statusListener, onError: errorListener, debugLogging: false);
+    if (!mounted) return;
+    setState(() {
+      _hasSpeech = hasSpeech;
+    });
+  }
 
   _buildMessage(Message message, bool isMe, bool isImage) {
     final Container msg = Container(
@@ -66,9 +94,7 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
           ),
           SizedBox(height: 8.0),
-          isImage
-              ? Image.network(message.text)
-              : SizedBox(height: 0),
+          isImage ? Image.network(message.text) : SizedBox(height: 0),
         ],
       ),
     );
@@ -102,7 +128,7 @@ class _ChatScreenState extends State<ChatScreen> {
           IconButton(
             icon: Icon(Icons.photo),
             iconSize: 25.0,
-            color: Theme.of(context).primaryColor,
+            color: Color(0xffff7575),
             onPressed: () {},
           ),
           Expanded(
@@ -111,14 +137,29 @@ class _ChatScreenState extends State<ChatScreen> {
               controller: inputController,
               onChanged: (value) {},
               decoration: InputDecoration.collapsed(
-                hintText: 'Send a message...',
+                hintText: inputHint,
               ),
             ),
           ),
           IconButton(
+            icon: Icon(Icons.mic),
+            iconSize: 25.0,
+            color: speech.isListening
+                ?Colors.red
+                :Color(0xffadadad),
+            onPressed: () {
+              if(!_hasSpeech || speech.isListening){
+                stopListening();
+              }{
+                startListening();
+              }
+              setState(() {});
+            },
+          ),
+          IconButton(
             icon: Icon(Icons.send),
             iconSize: 25.0,
-            color: Theme.of(context).primaryColor,
+            color: Color(0xffff7575),
             onPressed: () {
               sendMessage();
             },
@@ -175,7 +216,8 @@ class _ChatScreenState extends State<ChatScreen> {
                     itemBuilder: (BuildContext context, int index) {
                       final Message message = messages[index];
                       final bool isMe = message.sender.id == currentUser.id;
-                      final bool isImage = message.text.startsWith("http") && message.sender.id != currentUser.id;
+                      final bool isImage = message.text.startsWith("http") &&
+                          message.sender.id != currentUser.id;
                       return _buildMessage(message, isMe, isImage);
                     },
                   ),
@@ -229,4 +271,50 @@ class _ChatScreenState extends State<ChatScreen> {
     }
     setState(() {});
   }
+
+  void startListening() {
+    inputHint = 'Listing...';
+    speech.listen(
+        onResult: (val) => setState(() {
+          _text = val.recognizedWords;
+          inputController.text = _text;
+          if (val.hasConfidenceRating && val.confidence > 0) {
+            _confidence = val.confidence;
+          }
+        }),
+        partialResults: false,
+        localeId: _currentLocaleId,
+        onSoundLevelChange: soundLevelListener,
+        cancelOnError: true,
+        listenMode: ListenMode.confirmation);
+    setState(() {});
+  }
+
+  void stopListening() {
+    speech.stop();
+    inputHint = "send a msg...";
+    inputController.text = _text;
+    setState(() {
+      level = 0.0;
+    });
+  }
+
+  void soundLevelListener(double level) {
+    minSoundLevel = min(minSoundLevel, level);
+    maxSoundLevel = max(maxSoundLevel, level);
+    // print("sound level $level: $minSoundLevel - $maxSoundLevel ");
+    setState(() {
+      this.level = level;
+    });
+  }
+
+  void errorListener(SpeechRecognitionError error) {
+    stopListening();
+    print('onError: ' + error.toString());
+  }
+
+  void statusListener(String status) {
+    print('onStatus: ' + status.toString());
+  }
+
 }

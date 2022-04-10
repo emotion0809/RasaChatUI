@@ -1,8 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-
 import '../Model/auth_manager.dart';
-import '../Model/message_model.dart';
 import '../services/api_manager.dart';
 import '../widget/category_selector.dart';
 import '../widget/favorite_contacts.dart';
