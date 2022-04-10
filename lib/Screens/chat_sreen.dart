@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
+import '../Model/auth_manager.dart';
 import '../Model/message_model.dart';
 import '../Model/user_model.dart';
 import 'package:intl/intl.dart';
@@ -41,6 +42,10 @@ class _ChatScreenState extends State<ChatScreen> {
   void initState() {
     super.initState();
     initSpeechState();
+    Future<Auth> _auth = API_Manager().getAuth();
+    _auth.then((value) {
+      API_Manager.access_token = value.accessToken;
+    });
   }
 
   Future<void> initSpeechState() async {
@@ -281,8 +286,8 @@ class _ChatScreenState extends State<ChatScreen> {
                 text: API_Manager.bot_reply[i],
                 isLiked: false,
                 unread: false));
+            await flutterTts.speak(API_Manager.bot_reply[i]);
           }
-          await flutterTts.speak(API_Manager.bot_reply[i]);
           API_Manager.bot_reply[i] = "";
         }
       }
