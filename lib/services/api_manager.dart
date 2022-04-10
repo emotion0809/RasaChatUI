@@ -26,9 +26,9 @@ class API_Manager {
     }
   }
 
-  static Future<Reply> reply(String chat) async {
+  static Future<Reply> reply(String chat,String conversationID) async {
     final response = await http.post(
-      Uri.parse('http://192.168.1.1:5002/api/conversations/3/messages/'),
+      Uri.parse('http://192.168.1.1:5002/api/conversations/$conversationID/messages/'),
       headers: {
         'Content-Type': 'application/json',
         HttpHeaders.authorizationHeader: 'Bearer $access_token',
@@ -42,7 +42,7 @@ class API_Manager {
 
       for (int i = 0; i < result.length; i++) {
         bot_reply[i] =
-            result[i].toString().substring(23, result[i].toString().length - 1);
+            result[i].toString().substring(39, result[i].toString().length - 1);
       }
     }
     return Reply.fromJson(json.decode('{"recipient_id": "{conversationID}","text": "Hey! How are you?"}'));

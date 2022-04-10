@@ -24,6 +24,7 @@ class _ChatScreenState extends State<ChatScreen> {
   final inputController = TextEditingController();
   DateTime now = DateTime.now();
   String inputHint = "send a msg...";
+  String conversationID = "";
   //語音轉文字
   bool _hasSpeech = false;
   double level = 0.0;
@@ -42,10 +43,9 @@ class _ChatScreenState extends State<ChatScreen> {
   void initState() {
     super.initState();
     initSpeechState();
-    Future<Auth> _auth = API_Manager().getAuth();
-    _auth.then((value) {
-      API_Manager.access_token = value.accessToken;
-    });
+    //建立聊天房
+    now = DateTime.now();
+    conversationID = DateFormat('yyyyMMddHHmmssSSS').format(now);
   }
 
   Future<void> initSpeechState() async {
@@ -256,6 +256,7 @@ class _ChatScreenState extends State<ChatScreen> {
   sendMessage() async {
     String input = inputController.text;
     inputController.text = "";
+    now = DateTime.now();
     String formattedDate = DateFormat('h:mm a').format(now);
     if (input != '') {
       messages.add(Message(
@@ -266,7 +267,9 @@ class _ChatScreenState extends State<ChatScreen> {
           unread: false));
     }
     setState(() {});
-    await API_Manager.reply(input);
+    await API_Manager.reply(input,conversationID);
+    now = DateTime.now();
+    formattedDate = DateFormat('h:mm a').format(now);
     if (API_Manager.bot_reply != ["", "", "", "", ""]) {
       for (var i = 0; i < API_Manager.bot_reply.length; i++) {
         if (API_Manager.bot_reply[i] != "") {

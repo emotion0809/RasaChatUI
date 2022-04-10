@@ -1,5 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import '../Model/auth_manager.dart';
+import '../services/api_manager.dart';
 import '../widget/category_selector.dart';
 import '../widget/favorite_contacts.dart';
 import '../widget/recent_chats.dart';
@@ -10,6 +12,15 @@ class HomeScreen extends StatefulWidget{
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+
+  @override
+  void initState() {
+    super.initState();
+    Future<Auth> _auth = API_Manager().getAuth();
+    _auth.then((value) {
+      API_Manager.access_token = value.accessToken;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
